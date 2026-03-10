@@ -4,31 +4,42 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace WpfApp1
+
 {
     public partial class MainWindow : Window
     {
+        private IShapeFactory currentFactory;
+
         public MainWindow()
         {
             InitializeComponent();
             ColorComboBox.SelectionChanged += OnColorChanged;
-            OnColorChanged(null, null);
+            currentFactory = new RedFactory();
+            DrawShapes();
         }
 
         private void OnColorChanged(object sender, SelectionChangedEventArgs e)
         {
-            DrawingCanvas.Children.Clear();
-
             string selectedColor = (ColorComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
 
+            currentFactory = selectedColor switch
+            {
+                "Красный" => new RedFactory(),
+                "Чёрный" => new BlackFactory(),
+                "Синий" => new BlueFactory(),
+                _ => new RedFactory()
+            };
 
-            ShapeFactory circleFactory = CreateCircleFactory(selectedColor);
-            ShapeFactory squareFactory = CreateSquareFactory(selectedColor);
-            ShapeFactory triangleFactory = CreateTriangleFactory(selectedColor);
+            DrawShapes();
+        }
 
+        private void DrawShapes()
+        {
+            DrawingCanvas.Children.Clear();
 
-            var circle = circleFactory.CreateShape();
-            var square = squareFactory.CreateShape();
-            var triangle = triangleFactory.CreateShape();
+            var circle = currentFactory.CreateCircle();
+            var square = currentFactory.CreateSquare();
+            var triangle = currentFactory.CreateTriangle();
 
             Canvas.SetLeft(circle, 50);
             Canvas.SetTop(circle, 50);
@@ -41,132 +52,108 @@ namespace WpfApp1
             DrawingCanvas.Children.Add(square);
             DrawingCanvas.Children.Add(triangle);
         }
+    }
 
-        private ShapeFactory CreateCircleFactory(string color)
+    public interface IShapeFactory
+    {
+        Shape CreateCircle();
+        Shape CreateSquare();
+        Shape CreateTriangle();
+    }
+
+    public class RedFactory : IShapeFactory
+    {
+        public Shape CreateCircle() => new Ellipse
         {
-            return color switch
-            {
-                "Красный" => new RedCircleFactory(),
-                "Чёрный" => new BlackCircleFactory(),
-                "Синий" => new BlueCircleFactory(),
-                _ => new RedCircleFactory()
-            };
-        }
+            Width = 100,
+            Height = 100,
+            Fill = Brushes.Red,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
 
-        private ShapeFactory CreateSquareFactory(string color)
+        public Shape CreateSquare() => new Rectangle
         {
-            return color switch
-            {
-                "Красный" => new RedSquareFactory(),
-                "Чёрный" => new BlackCircleFactory(),
-                "Синий" => new BlueCircleFactory(),
-                _ => new RedSquareFactory()
-            };
-        }
+            Width = 100,
+            Height = 100,
+            Fill = Brushes.Red,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
 
-        private ShapeFactory CreateTriangleFactory(string color)
+        public Shape CreateTriangle() => new Polygon
         {
-            return color switch
-            {
-                "Красный" => new RedTriangleFactory(),
-                "Чёрный" => new BlackCircleFactory(),
-                "Синий" => new BlueCircleFactory(),
-                _ => new RedTriangleFactory()
-            };
-        }
+            Points = new PointCollection { new Point(50, 0), new Point(0, 100), new Point(100, 100) },
+            Fill = Brushes.Red,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2,
+            Width = 100,
+            Height = 100,
+            Stretch = Stretch.Fill
+        };
     }
 
-    public abstract class ShapeFactory
+    public class BlackFactory : IShapeFactory
     {
-        public abstract Shape CreateShape();
-    }
-
-
-    public abstract class CircleFactory : ShapeFactory
-    {
-        public override Shape CreateShape()
+        public Shape CreateCircle() => new Ellipse
         {
-            return new Ellipse
-            {
-                Width = 100,
-                Height = 100,
-                Fill = GetColor(),
-                Stroke = Brushes.Black,
-                StrokeThickness = 2
-            };
-        }
-        protected abstract Brush GetColor();
-    }
-    public class RedCircleFactory : CircleFactory
-    {
-        protected override Brush GetColor() => Brushes.Red;
-    }
-    public class BlackCircleFactory : CircleFactory
-    {
-        protected override Brush GetColor() => Brushes.Black;
-    }
-    public class BlueCircleFactory : CircleFactory
-    {
-        protected override Brush GetColor() => Brushes.Blue;
-    }
+            Width = 100,
+            Height = 100,
+            Fill = Brushes.Black,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
 
-
-    public abstract class SquareFactory : ShapeFactory
-    {
-        public override Shape CreateShape()
+        public Shape CreateSquare() => new Rectangle
         {
-            return new Rectangle
-            {
-                Width = 100,
-                Height = 100,
-                Fill = GetColor(),
-                Stroke = Brushes.Black,
-                StrokeThickness = 2
-            };
-        }
-        protected abstract Brush GetColor();
-    }
-    public class RedSquareFactory : SquareFactory
-    {
-        protected override Brush GetColor() => Brushes.Red;
-    }
-    public class BlackSquareFactory : SquareFactory
-    {
-        protected override Brush GetColor() => Brushes.Black;
-    }
-    public class BlueSquareFactory : SquareFactory
-    {
-        protected override Brush GetColor() => Brushes.Blue;
-    }
+            Width = 100,
+            Height = 100,
+            Fill = Brushes.Black,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
 
-
-    public abstract class TriangleFactory : ShapeFactory
-    {
-        public override Shape CreateShape()
+        public Shape CreateTriangle() => new Polygon
         {
-            return new Polygon
-            {
-                Points = new PointCollection { new Point(50, 0), new Point(0, 100), new Point(100, 100) },
-                Fill = GetColor(),
-                Stroke = Brushes.Black,
-                StrokeThickness = 2,
-                Width = 100,
-                Height = 100,
-                Stretch = Stretch.Fill
-            };
-        }
-        protected abstract Brush GetColor();
+            Points = new PointCollection { new Point(50, 0), new Point(0, 100), new Point(100, 100) },
+            Fill = Brushes.Black,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2,
+            Width = 100,
+            Height = 100,
+            Stretch = Stretch.Fill
+        };
     }
-    public class RedTriangleFactory : TriangleFactory
+
+    public class BlueFactory : IShapeFactory
     {
-        protected override Brush GetColor() => Brushes.Red;
-    }
-    public class BlackTriangleFactory : TriangleFactory
-    {
-        protected override Brush GetColor() => Brushes.Black;
-    }
-    public class BlueTriangleFactory : TriangleFactory
-    {
-        protected override Brush GetColor() => Brushes.Blue;
+        public Shape CreateCircle() => new Ellipse
+        {
+            Width = 100,
+            Height = 100,
+            Fill = Brushes.Blue,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
+
+        public Shape CreateSquare() => new Rectangle
+        {
+            Width = 100,
+            Height = 100,
+            Fill = Brushes.Blue,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2
+        };
+
+        public Shape CreateTriangle() => new Polygon
+        {
+            Points = new PointCollection { new Point(50, 0), new Point(0, 100), new Point(100, 100) },
+            Fill = Brushes.Blue,
+            Stroke = Brushes.Black,
+            StrokeThickness = 2,
+            Width = 100,
+            Height = 100,
+            Stretch = Stretch.Fill
+        };
     }
 }
